@@ -263,6 +263,7 @@ def get_executor(
             num_gpus=-1 if gpus_per_node else None,
             network="host",
             env_vars=env_vars,
+            ulimits=["nofile:65536:65536"],
             additional_kwargs={"entrypoint": ""},
         )
 
