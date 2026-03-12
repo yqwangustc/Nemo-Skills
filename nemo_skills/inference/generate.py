@@ -217,6 +217,7 @@ class GenerationTaskConfig:
     enable_audio_chunking: bool = True
     audio_chunk_task_types: list[str] | None = None  # If None, chunk all task types; if specified, only chunk these
     chunk_audio_threshold_sec: int = 30  # Duration in seconds for each audio chunk
+    max_audio_duration: float | None = None  # If set, skip rows with audio longer than this (seconds)
 
     # Evaluation setup if requested. If eval_type is set to None, evaluation is skipped
     eval_type: str | None = None  # "lean4-proof", "math", etc.
@@ -725,8 +726,50 @@ class GenerationTask:
         data_point.update(eval_results)
         return data_point
 
+    def _get_audio_duration(self, data_point):
+        """Return audio duration in seconds if the data point has an audio file, else None."""
+        # Try top-level 'sound' field first
+        audio_path = data_point.get("sound")
+        if not audio_path:
+            # Fall back to audio_url in messages
+            for msg in data_point.get("messages", []):
+                if msg.get("role") != "user":
+                    continue
+                content = msg.get("content", [])
+                if not isinstance(content, list):
+                    continue
+                for item in content:
+                    if item.get("type") == "audio_url":
+                        url = item.get("audio_url", {}).get("url", "")
+                        if url.startswith("file://"):
+                            audio_path = url[len("file://"):]
+                            break
+                if audio_path:
+                    break
+
+        if not audio_path or not Path(audio_path).is_file():
+            return None
+
+        import wave
+
+        with wave.open(audio_path) as w:
+            return w.getnframes() / w.getframerate()
+
     async def _generate_and_save_datapoint(self, data_point, all_data, fout, pbar):
         """Starts generation, evaluation and saves the output for a single data point."""
+        # Skip rows with audio longer than max_audio_duration
+        if self.cfg.max_audio_duration is not None:
+            duration = self._get_audio_duration(data_point)
+            if duration is not None and duration > self.cfg.max_audio_duration:
+                LOG.warning(
+                    "Skipping data point with audio duration %.1fs (max %.1fs)",
+                    duration,
+                    self.cfg.max_audio_duration,
+                )
+                async with self.output_lock:
+                    pbar.update(1)
+                return
+
         # Generate output for this single data point
         start_time = time.time()
         output = await self.process_single_datapoint(data_point, all_data)

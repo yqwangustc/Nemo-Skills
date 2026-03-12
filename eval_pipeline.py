@@ -14,16 +14,17 @@ from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
 # ---------------------------------------------------------------------------
 # Configuration — edit these to match your setup
 # ---------------------------------------------------------------------------
-cluster = "iad"
-model = "/path/to/your/model"
-input_file = "/path/to/your/input.jsonl"
-output_dir = "/path/to/your/output_dir"
-k = 8  # number of samples per problem (controls pass@k)
+cluster = "local"
+model = "/workspace/work/tmp/models/omni-mpo-step-400/step_400"
+input_file = "/workspace/work/tmp/reasoning_filter_sample200.jsonl"
+output_dir = "/workspace/work/tmp/output_v3"
+k = 5  # number of samples per problem (controls pass@k)
+max_audio_duration = 5  # seconds
 
 server_type = "vllm"
 server_gpus = 1
 server_nodes = 1
-num_chunks = 128
+num_chunks = 1
 
 # Inference parameters
 temperature = 1.0
@@ -32,10 +33,7 @@ tokens_to_generate = 2048
 
 # Additional server args (adjust for your model)
 server_args = (
-    "--max-num-seqs=256 "
-    "--swap-space=8 "
-    "--gpu-memory-utilization=0.9 "
-    "--max-model-len=65536"
+    r"""--max-num-seqs=256 --swap-space=8 --gpu-memory-utilization=0.9 --allowed-local-media-path=/ '--limit-mm-per-prompt={\"video\":0,\"image\":0,\"audio\":4}' --max-model-len=65536"""
 )
 
 expname = "pass_at_k_eval"
@@ -46,6 +44,7 @@ expname = "pass_at_k_eval"
 # num_random_seeds=k creates output-rs0.jsonl ... output-rs{k-1}.jsonl
 # eval_type=simple_mcq runs the evaluator after each generation, adding
 # predicted_answer and symbolic_correct fields.
+# max_audio_duration skips rows with audio files longer than the threshold.
 
 generate(
     cluster=cluster,
@@ -62,11 +61,16 @@ generate(
     ctx=wrap_arguments(
         "++eval_type=simple_mcq "
         "++prompt_format=openai "
+        "++enable_audio=True "
+        "++drop_content_types=[] "
+        "++inference.timeout=600 "
         f"++inference.temperature={temperature} "
         f"++inference.top_p={top_p} "
         f"++inference.tokens_to_generate={tokens_to_generate} "
-        "++parse_reasoning=False "
+        "++parse_reasoning=True "
+        f"++max_audio_duration={max_audio_duration} "
     ),
+    # dry_run=True,
 )
 
 # ---------------------------------------------------------------------------
@@ -76,6 +80,7 @@ generate(
 # majority@1..k via BaseMetrics._compute_pass_at_k().
 
 summarize_results(
+    cluster=cluster,
     results_dir=output_dir,
     metric_type="multichoice",
 )
