@@ -15,21 +15,21 @@ from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
 # Configuration — edit these to match your setup
 # ---------------------------------------------------------------------------
 cluster = "local"
-model = "/workspace/work/tmp/models/omni-mpo-step-400/step_400"
-input_file = "/workspace/work/tmp/reasoning_filter_sample200.jsonl"
-output_dir = "/workspace/work/tmp/output_v3"
+model = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/models/mpo-nanov3omni-mmpr-nanov2-filtered-conv3d-0303/step_400"
+input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter.jsonl"
+output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer/"
 k = 5  # number of samples per problem (controls pass@k)
-max_audio_duration = 5  # seconds
+max_audio_duration = 300  # seconds
 
 server_type = "vllm"
 server_gpus = 1
-server_nodes = 1
-num_chunks = 1
+server_nodes = 128
+num_chunks = 1024
 
 # Inference parameters
-temperature = 1.0
+temperature = 0.6
 top_p = 0.95
-tokens_to_generate = 2048
+tokens_to_generate = 16384
 
 # Additional server args (adjust for your model)
 server_args = (
