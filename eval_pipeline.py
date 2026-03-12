@@ -14,7 +14,7 @@ from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
 # ---------------------------------------------------------------------------
 # Configuration — edit these to match your setup
 # ---------------------------------------------------------------------------
-cluster = "local"
+cluster = "iad"
 model = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/models/mpo-nanov3omni-mmpr-nanov2-filtered-conv3d-0303/step_400"
 input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter.jsonl"
 output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer/"
