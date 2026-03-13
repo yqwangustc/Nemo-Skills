@@ -750,10 +750,24 @@ class GenerationTask:
         if not audio_path or not Path(audio_path).is_file():
             return None
 
-        import wave
+        try:
+            import soundfile as sf
 
-        with wave.open(audio_path) as w:
-            return w.getnframes() / w.getframerate()
+            info = sf.info(audio_path)
+            return info.duration
+        except Exception:
+            pass
+
+        try:
+            import wave
+
+            with wave.open(audio_path) as w:
+                return w.getnframes() / w.getframerate()
+        except Exception:
+            pass
+
+        LOG.warning("Could not determine audio duration for %s, skipping duration check", audio_path)
+        return None
 
     async def _generate_and_save_datapoint(self, data_point, all_data, fout, pbar):
         """Starts generation, evaluation and saves the output for a single data point."""

@@ -17,14 +17,14 @@ from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
 cluster = "iad"
 model = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/models/mpo-nanov3omni-mmpr-nanov2-filtered-conv3d-0303/step_400"
 input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter.jsonl"
-output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer/"
+output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer.t3"
 k = 5  # number of samples per problem (controls pass@k)
 max_audio_duration = 300  # seconds
 
 server_type = "vllm"
 server_gpus = 1
-server_nodes = 128
-num_chunks = 1024
+server_nodes = 1
+num_chunks = 64
 
 # Inference parameters
 temperature = 0.6
@@ -36,7 +36,7 @@ server_args = (
     r"""--max-num-seqs=256 --swap-space=8 --gpu-memory-utilization=0.9 --allowed-local-media-path=/ '--limit-mm-per-prompt={\"video\":0,\"image\":0,\"audio\":4}' --max-model-len=65536"""
 )
 
-expname = "pass_at_k_eval"
+expname = "t3-pass_at_k_eval"
 
 # ---------------------------------------------------------------------------
 # Step 1: Generate k samples with simple_mcq evaluation
@@ -69,6 +69,7 @@ generate(
         f"++inference.tokens_to_generate={tokens_to_generate} "
         "++parse_reasoning=True "
         f"++max_audio_duration={max_audio_duration} "
+        "++context_limit_retry_config.enable_soft_fail=True "
     ),
     # dry_run=True,
 )
