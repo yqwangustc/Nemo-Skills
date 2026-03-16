@@ -17,7 +17,7 @@ from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
 cluster = "iad"
 model = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/models/mpo-nanov3omni-mmpr-nanov2-filtered-conv3d-0303/step_400"
 input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter.jsonl"
-output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer.t4"
+output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer.t5"
 k = 5  # number of samples per problem (controls pass@k)
 max_audio_duration = 300  # seconds
 
@@ -36,7 +36,7 @@ server_args = (
     r"""--max-num-seqs=256 --swap-space=8 --gpu-memory-utilization=0.9 --allowed-local-media-path=/ '--limit-mm-per-prompt={\"video\":0,\"image\":0,\"audio\":4}' --max-model-len=65536"""
 )
 
-expname = "t4-pass_at_k_eval"
+expname = "t5-pass_at_k_eval"
 
 # ---------------------------------------------------------------------------
 # Step 1: Generate k samples with simple_mcq evaluation
