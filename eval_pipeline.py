@@ -9,22 +9,22 @@ Usage (Python API):
 Modify the configuration variables below to match your setup.
 """
 
-from nemo_skills.pipeline.cli import generate, summarize_results, wrap_arguments
+from nemo_skills.pipeline.cli import generate, run_cmd, summarize_results, wrap_arguments
 
 # ---------------------------------------------------------------------------
 # Configuration — edit these to match your setup
 # ---------------------------------------------------------------------------
 cluster = "iad"
 model = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/models/mpo-nanov3omni-mmpr-nanov2-filtered-conv3d-0303/step_400"
-input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter.jsonl"
-output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer.t5"
+input_file = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/music_qa/music_qa_batch_1_2_3.jsonl"
+output_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/music_qa/reasoning_filter_infer.t2"
 k = 5  # number of samples per problem (controls pass@k)
 max_audio_duration = 300  # seconds
 
 server_type = "vllm"
 server_gpus = 1
 server_nodes = 1
-num_chunks = 64
+num_chunks = 256
 
 # Inference parameters
 temperature = 0.6
@@ -79,9 +79,17 @@ generate(
 # ---------------------------------------------------------------------------
 # metric_type="multichoice" uses MathMetrics which computes pass@1..k and
 # majority@1..k via BaseMetrics._compute_pass_at_k().
+# Submitted as a dependent SLURM job that waits for generation to complete.
 
-summarize_results(
+run_cmd(
+    ctx=wrap_arguments(""),
     cluster=cluster,
-    results_dir=output_dir,
-    metric_type="multichoice",
+    command=(
+        f"python -m nemo_skills.pipeline.summarize_results "
+        f"--results-dir={output_dir} "
+        f"--cluster={cluster} "
+        f"--metric-type=multichoice"
+    ),
+    expname="summarize_results",
+    run_after=[expname],
 )

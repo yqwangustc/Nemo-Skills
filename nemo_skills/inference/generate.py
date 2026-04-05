@@ -857,13 +857,18 @@ class GenerationTask:
         with open(self.cfg.output_file + "-async", "rt", encoding="utf-8") as fin:
             generations = [json.loads(line) for line in fin]
 
-        ordered_generations = [None] * len(generations)
+        # Use max position + 1 to size the list, since some positions may be
+        # missing when items are skipped (e.g. by max_audio_duration filtering).
+        max_pos = max(gen[self.cfg.async_position_key] for gen in generations)
+        ordered_generations = [None] * (max_pos + 1)
         for gen_dict in generations:
             async_pos = gen_dict.pop(self.cfg.async_position_key)
             ordered_generations[async_pos] = gen_dict
 
         with open(self.cfg.output_file, "wt", encoding="utf-8") as fout:
             for gen_dict in ordered_generations:
+                if gen_dict is None:
+                    continue
                 fout.write(json.dumps(gen_dict) + "\n")
 
         Path(self.cfg.output_file + "-async").unlink()
