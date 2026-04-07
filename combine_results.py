@@ -4,7 +4,7 @@ import json
 import glob
 from collections import defaultdict
 
-input_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/reasoning_filter_infer.t5"
+input_dir = "/lustre/fsw/portfolios/llmservice/users/yongqiangw/data/music_qa/reasoning_filter_infer.t2"
 output_file = f"{input_dir}/combined.jsonl"
 
 # Open all seed files
